@@ -1,55 +1,6 @@
-class Cache{
-    #limit;
-    constructor(limit) {
-        if (this.constructor == Cache) {
-            throw new Error("Cannot instantiate an abstract class");
-        }
-        else {
-            this.#limit = limit;
-        }
-    }
-
-    get(key){}
-
-    insert(key, value){}
-}
-
-class Node{
-    constructor(value, next, prev) {
-        this.value = value;
-        this.next = next;
-        this.prev = prev;
-    }
-}
-
-class LinkedList{
-    constructor() {
-        this.head = new Node(-1, null, null);
-        this.tail = new Node(-1, null, null);
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
-        
-    }
-
-    add(node) { //add the nodes to the front
-        if (! node instanceof Node) {
-            throw new Error("Can add only nodes in linked list");
-        }
-        const tempNode = this.head.next;
-        this.head.next = node;
-        node.next = tempNode;
-        tempNode.prev = node;
-    }
-
-    remove(node) { 
-         if (! node instanceof Node) {
-            throw new Error("Can add only nodes in linked list");
-        }
-        const previousNode = node.prev;
-        previousNode.next = node.next;
-        node.next.prev = previousNode;
-    }
-}
+const LinkedList =  require( "./LinkedList");
+const Cache = require("./Cache");
+const Node = require("./Node");
 
 class LRUCache extends Cache{
     constructor(limit) {
@@ -66,10 +17,8 @@ class LRUCache extends Cache{
         }
         else {
             const val = this.cache[key].value;
-            list.remove(this.cache[key]);
-            const newNode = new Node(val, null, null);
-            list.add(newNode);
-            this.cache[key] = newNode;
+            const node = this.list.remove(this.cache[key]);
+            this.list.add(node);
             return val;
         }
         
@@ -77,12 +26,31 @@ class LRUCache extends Cache{
     insert(key, value) {
        
         if (this.cache[key] != undefined) {
-            this.list.remove(this.cache[key]);
-            const newNode = new Node(value, null, null);
-            list.add(newNode);
-            this.cache[key] = newNode;
-            return val;
-            
+            const node = this.list.remove(this.cache[key]);
+            node.value = value;
+            this.list.add(node);
+            this.cache[key] = node;
+           
+        }
+        else {
+            if (this.counter < this.limit()) {
+                this.counter++;
+
+                const newNode = new Node(key,value, null, null);
+                this.list.add(newNode);
+                this.cache[key] = newNode;
+            }
+            else {
+                this.counter++;
+                const lastNode = this.list.remove(this.list.tail.prev);
+                const keyToDelete = lastNode.key; 
+                delete this.cache[keyToDelete];
+                lastNode.key = key;
+                lastNode.value = value;
+                this.list.add(lastNode);
+                this.cache[key] = lastNode;
+                
+            }
         }
 
         
@@ -90,5 +58,4 @@ class LRUCache extends Cache{
 
 }
 
-const test = { "h": "l" };
-console.log(test["h"]);
+module.exports = LRUCache;
